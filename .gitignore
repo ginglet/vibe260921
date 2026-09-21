@@ -1,2 +1,48 @@
+# ---------------------------------------------------------------- Python
 __pycache__/
+*.py[cod]
+*.egg-info/
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.ipynb_checkpoints/
+
+# 가상환경
+.venv/
+venv/
+env/
+
+# ---------------------------------------------------------------- 환경변수 / 비밀 값 (절대 올리지 않기)
+.env
+.env.*
+!.env.example
+*.pem
+*.key
+
+# ---------------------------------------------------------------- 빌드 결과물 (PyInstaller 등)
+build/
+dist/
+*.spec
+*.exe
+
+# ---------------------------------------------------------------- 크롤러가 만든 결과 파일
+naver_news*.json
+naver_news*.csv
+naver_news*.xlsx
+kospi200*.json
+kospi200*.csv
+kospi200*.xlsx
+
+# ---------------------------------------------------------------- Django (DemoPort)
+db.sqlite3
+*.sqlite3
+media/
+staticfiles/
+
+# ---------------------------------------------------------------- 편집기 / OS
 .vscode/
+.idea/
+*.swp
+.DS_Store
+Thumbs.db
+desktop.ini
