@@ -1,0 +1,69 @@
+{% extends "base.html" %}
+{% block title %}바이브코딩 · Django · SQL 개발자{% endblock %}
+
+{% block head_extra %}
+{% if profile %}
+<script type="application/ld+json">
+{"@context":"https://schema.org","@type":"Person","name":"{{ profile.name|escapejs }}","jobTitle":"Developer","email":"{{ profile.email|escapejs }}","url":"{{ SITE_URL|escapejs }}"}
+</script>
+{% endif %}
+{% endblock %}
+
+{% block content %}
+<section class="hero">
+  <div class="container hero-inner">
+    <div class="hero-text">
+      <p class="eyebrow">DEVELOPER PORTFOLIO</p>
+      <h1>
+        안녕하세요,<br>
+        <span class="accent">{{ profile.name|default:"개발자" }}</span>입니다.
+      </h1>
+      <p class="lead">{{ profile.headline|default:"바이브코딩으로 빠르게 만들고, Django와 SQL로 단단하게 다듬습니다." }}</p>
+      <ul class="tags tags-lg" aria-label="주 개발 분야">
+        {% for skill in core_skills %}<li class="tag tag-core">{{ skill.name }}</li>
+        {% empty %}
+        <li class="tag tag-core">바이브코딩</li><li class="tag tag-core">Django</li><li class="tag tag-core">SQL</li>
+        {% endfor %}
+      </ul>
+      <div class="cta">
+        <a class="btn btn-primary" href="{% url 'portfolio:project_list' %}">프로젝트 보기</a>
+        <a class="btn btn-ghost" href="{% url 'portfolio:contact' %}">문의하기</a>
+      </div>
+    </div>
+
+    <div class="terminal" aria-hidden="true">
+      <div class="terminal-bar"><span></span><span></span><span></span></div>
+      <pre class="terminal-body"><span class="prompt">$</span> whoami
+{{ profile.name|default:"developer" }}
+<span class="prompt">$</span> cat stack.txt
+{% for skill in core_skills %}- {{ skill.name }}
+{% empty %}- 바이브코딩
+- Django
+- SQL
+{% endfor %}<span class="prompt">$</span> <span class="cursor">▍</span></pre>
+    </div>
+  </div>
+</section>
+
+{% if featured %}
+<section class="section">
+  <div class="container">
+    <div class="section-head reveal">
+      <h2>대표 프로젝트</h2>
+      <a class="more" href="{% url 'portfolio:project_list' %}">전체 보기 →</a>
+    </div>
+    <div class="grid grid-3">
+      {% for project in featured %}{% include "portfolio/_project_card.html" %}{% endfor %}
+    </div>
+  </div>
+</section>
+{% endif %}
+
+<section class="section section-cta">
+  <div class="container reveal">
+    <h2>함께 만들어 볼까요?</h2>
+    <p class="muted">프로젝트 문의나 협업 제안은 언제든 환영합니다.</p>
+    <a class="btn btn-primary" href="{% url 'portfolio:contact' %}">문의 남기기</a>
+  </div>
+</section>
+{% endblock %}

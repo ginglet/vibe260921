@@ -1,0 +1,18 @@
+<article class="card project-card reveal">
+  <a class="card-link" href="{{ project.get_absolute_url }}" aria-label="{{ project.title }} 상세 보기">
+    <div class="thumb">
+      {% if project.thumbnail %}
+        <img src="{{ project.thumbnail.url }}" alt="{{ project.title }} 썸네일" loading="lazy" width="600" height="375">
+      {% else %}
+        <div class="thumb-placeholder" aria-hidden="true">&lt;/&gt;</div>
+      {% endif %}
+    </div>
+    <div class="card-body">
+      <h3>{{ project.title }}</h3>
+      <p class="muted">{{ project.summary }}</p>
+      <ul class="tags">
+        {% for skill in project.skills.all %}<li class="tag">{{ skill.name }}</li>{% endfor %}
+      </ul>
+    </div>
+  </a>
+</article>

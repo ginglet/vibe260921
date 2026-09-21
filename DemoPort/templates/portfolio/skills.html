@@ -1,0 +1,53 @@
+{% extends "base.html" %}
+{% block title %}기술 스택{% endblock %}
+{% block description %}바이브코딩, Django, SQL을 중심으로 한 기술 스택과 각 기술을 적용한 프로젝트{% endblock %}
+
+{% block content %}
+<section class="page-head">
+  <div class="container">
+    <h1>기술 스택</h1>
+    <p class="muted">주력 분야와 사용 기술입니다. 기술을 누르면 적용한 프로젝트를 볼 수 있습니다.</p>
+  </div>
+</section>
+
+<section class="section">
+  <div class="container">
+    {% if core_skills %}
+    <h2 class="reveal">주력 분야</h2>
+    <div class="grid grid-3">
+      {% for skill in core_skills %}
+      <a class="card core-card reveal" href="{% url 'portfolio:project_list' %}?tag={{ skill.slug|urlencode }}">
+        <h3>{{ skill.name }}</h3>
+        <p class="muted">{{ skill.category.name }}</p>
+        <p class="count">{% if skill.project_count %}프로젝트 {{ skill.project_count }}개 보기 →{% else %}적용 프로젝트 준비 중{% endif %}</p>
+      </a>
+      {% endfor %}
+    </div>
+    {% endif %}
+
+    {% for category in categories %}
+    <div class="skill-group reveal">
+      <h2>{{ category.name }}</h2>
+      <ul class="skill-list">
+        {% for skill in category.skills.all %}
+        <li>
+          {% if skill.project_count %}
+            <a class="skill-chip" href="{% url 'portfolio:project_list' %}?tag={{ skill.slug|urlencode }}">{{ skill.name }}<span class="chip-count">{{ skill.project_count }}</span></a>
+          {% else %}
+            <span class="skill-chip">{{ skill.name }}</span>
+          {% endif %}
+          {% if skill.level %}
+            <span class="level" role="img" aria-label="숙련도 5점 만점에 {{ skill.level }}점">
+              {% for i in "12345" %}<i class="{% if forloop.counter <= skill.level %}on{% endif %}"></i>{% endfor %}
+            </span>
+          {% endif %}
+        </li>
+        {% endfor %}
+      </ul>
+    </div>
+    {% empty %}
+    <p class="muted">등록된 기술이 없습니다.</p>
+    {% endfor %}
+  </div>
+</section>
+{% endblock %}

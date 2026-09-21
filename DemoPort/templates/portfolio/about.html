@@ -1,0 +1,65 @@
+{% extends "base.html" %}
+{% block title %}소개{% endblock %}
+{% block description %}{{ profile.name }}의 소개, 개발 철학, 바이브코딩 작업 방식{% endblock %}
+
+{% block content %}
+<section class="page-head">
+  <div class="container"><h1>소개</h1></div>
+</section>
+
+<section class="section">
+  <div class="container about-grid">
+    <div class="about-photo reveal">
+      {% if profile.photo %}
+        <img src="{{ profile.photo.url }}" alt="{{ profile.name }} 프로필 사진" width="320" height="320">
+      {% else %}
+        <div class="photo-placeholder" aria-hidden="true">{{ profile.name|default:"?"|slice:":1" }}</div>
+      {% endif %}
+    </div>
+    <div class="about-text reveal">
+      <h2>{{ profile.name }}</h2>
+      <p class="lead">{{ profile.headline }}</p>
+      {% if profile.bio %}<div class="prose">{{ profile.bio|linebreaks }}</div>{% endif %}
+    </div>
+  </div>
+</section>
+
+{% if profile.philosophy %}
+<section class="section section-alt">
+  <div class="container narrow reveal">
+    <h2>개발 철학</h2>
+    <div class="prose">{{ profile.philosophy|linebreaks }}</div>
+  </div>
+</section>
+{% endif %}
+
+{% if profile.vibe_coding_approach %}
+<section class="section" id="vibe-coding">
+  <div class="container narrow reveal">
+    <p class="eyebrow">VIBE CODING</p>
+    <h2>바이브코딩 작업 방식</h2>
+    <div class="prose callout">{{ profile.vibe_coding_approach|linebreaks }}</div>
+  </div>
+</section>
+{% endif %}
+
+{% if experience_groups %}
+<section class="section section-alt">
+  <div class="container narrow">
+    <h2 class="reveal">경력 · 학력 · 활동</h2>
+    {% for label, items in experience_groups %}
+    <h3 class="timeline-label reveal">{{ label }}</h3>
+    <ol class="timeline">
+      {% for exp in items %}
+      <li class="reveal">
+        <p class="timeline-date">{{ exp.start_date|date:"Y.m" }} – {% if exp.end_date %}{{ exp.end_date|date:"Y.m" }}{% else %}현재{% endif %}</p>
+        <h4>{{ exp.title }}{% if exp.organization %} <span class="muted">· {{ exp.organization }}</span>{% endif %}</h4>
+        {% if exp.description %}<p class="muted">{{ exp.description|linebreaksbr }}</p>{% endif %}
+      </li>
+      {% endfor %}
+    </ol>
+    {% endfor %}
+  </div>
+</section>
+{% endif %}
+{% endblock %}

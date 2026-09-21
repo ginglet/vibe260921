@@ -1,0 +1,12 @@
+{% extends "base.html" %}
+{% block title %}페이지를 찾을 수 없습니다{% endblock %}
+{% block content %}
+<section class="section error-page">
+  <div class="container">
+    <p class="error-code">404</p>
+    <h1>페이지를 찾을 수 없습니다</h1>
+    <p class="muted">주소가 바뀌었거나 삭제된 페이지일 수 있어요.</p>
+    <a class="btn btn-primary" href="{% url 'portfolio:home' %}">홈으로 돌아가기</a>
+  </div>
+</section>
+{% endblock %}
