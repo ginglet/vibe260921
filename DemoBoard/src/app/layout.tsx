@@ -26,12 +26,18 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
     >
       <body className="min-h-full flex flex-col bg-background text-foreground">
         <header className="border-b border-border bg-card/50 backdrop-blur supports-backdrop-filter:bg-card/30">
-          <div className="mx-auto max-w-3xl px-4 py-4">
+          <div className="mx-auto flex max-w-3xl items-center justify-between px-4 py-4">
             <h1 className="text-2xl font-bold">
               <a href="/" className="hover:text-primary transition-colors">
                 DemoBoard
               </a>
             </h1>
+            <a
+              href="/admin"
+              className="text-sm text-muted-foreground hover:text-primary transition-colors"
+            >
+              관리자
+            </a>
           </div>
         </header>
         <main className="flex-1 mx-auto w-full max-w-3xl px-4 py-8">

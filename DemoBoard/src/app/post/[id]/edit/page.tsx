@@ -3,6 +3,7 @@ import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { PostForm } from "@/components/post-form";
 import { actionGetPost } from "@/app/actions";
+import { listCategories } from "@/lib/db";
 
 interface PageProps {
   params: Promise<{ id: string }>;
@@ -11,7 +12,7 @@ interface PageProps {
 export const revalidate = 0;
 
 async function EditContent({ id }: { id: number }) {
-  const result = await actionGetPost(id);
+  const [result, categories] = await Promise.all([actionGetPost(id), listCategories()]);
 
   if (!result.ok) {
     return (
@@ -21,7 +22,7 @@ async function EditContent({ id }: { id: number }) {
     );
   }
 
-  return <PostForm post={result.post} isEdit={true} />;
+  return <PostForm post={result.post} isEdit={true} categories={categories} />;
 }
 
 export default function EditPage({ params }: PageProps) {

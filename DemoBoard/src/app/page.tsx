@@ -1,10 +1,9 @@
-import { Suspense, use } from "react";
+import { Suspense } from "react";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { PostList } from "@/components/post-list";
-import { actionListPosts } from "./actions";
-import { CATEGORIES } from "@/lib/types";
+import { actionListCategories, actionListPosts } from "./actions";
 
 interface PageProps {
   searchParams: Promise<{
@@ -19,7 +18,7 @@ export const revalidate = 0; // 동적 렌더링
 async function PostListContainer({ q, category, page }: { q?: string; category?: string; page: number }) {
   const result = await actionListPosts({
     q,
-    category: category && CATEGORIES.includes(category as any) ? (category as any) : undefined,
+    category: category || undefined,
     page,
   });
 
@@ -58,11 +57,14 @@ async function PostListContainer({ q, category, page }: { q?: string; category?:
   );
 }
 
-export default function Page({ searchParams }: PageProps) {
-  const params = use(searchParams);
+export default async function Page({ searchParams }: PageProps) {
+  const params = await searchParams;
   const q = params.q?.trim();
   const category = params.category?.trim();
   const page = Math.max(1, parseInt(params.page || "1"));
+
+  const categoriesResult = await actionListCategories();
+  const categories = categoriesResult.ok ? categoriesResult.categories : [];
 
   return (
     <div className="space-y-6">
@@ -89,16 +91,16 @@ export default function Page({ searchParams }: PageProps) {
               전체
             </Button>
           </Link>
-          {CATEGORIES.map((cat) => (
+          {categories.map((cat) => (
             <Link
-              key={cat}
-              href={`/?${new URLSearchParams({ category: cat, ...(q && { q }) })}`}
+              key={cat.id}
+              href={`/?${new URLSearchParams({ category: cat.name, ...(q && { q }) })}`}
             >
               <Button
-                variant={category === cat ? "default" : "outline"}
+                variant={category === cat.name ? "default" : "outline"}
                 size="sm"
               >
-                {cat}
+                {cat.name}
               </Button>
             </Link>
           ))}

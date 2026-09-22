@@ -6,13 +6,30 @@ import {
   deleteComment,
   deletePost,
   getPost,
+  listCategories,
   listPosts,
   updatePost,
   type ListParams,
   type ListResult,
 } from "@/lib/db";
 import { parseCommentForm, parsePostForm, parsePasswordOnly } from "@/lib/validation";
-import { type Post, type PostSummary } from "@/lib/types";
+import { type CategoryInfo, type Post, type PostSummary } from "@/lib/types";
+
+function isInvalidCategoryError(error: unknown): boolean {
+  return typeof error === "object" && error !== null && (error as { code?: string }).code === "23503";
+}
+
+export async function actionListCategories(): Promise<
+  { ok: true; categories: CategoryInfo[] } | { ok: false; error: string }
+> {
+  try {
+    const categories = await listCategories();
+    return { ok: true, categories };
+  } catch (error) {
+    console.error("actionListCategories failed:", error);
+    return { ok: false, error: "카테고리를 불러올 수 없습니다." };
+  }
+}
 
 export async function actionListPosts(
   params: ListParams,
@@ -48,6 +65,9 @@ export async function actionCreatePost(formData: FormData): Promise<
     return { ok: true, postId: post.id };
   } catch (error) {
     console.error("actionCreatePost failed:", error);
+    if (isInvalidCategoryError(error)) {
+      return { ok: false, error: "존재하지 않는 카테고리입니다. 목록을 새로고침해 주세요." };
+    }
     return { ok: false, error: "글을 저장할 수 없습니다." };
   }
 }
@@ -67,6 +87,9 @@ export async function actionUpdatePost(id: number, formData: FormData): Promise<
     return { ok: true };
   } catch (error) {
     console.error("actionUpdatePost failed:", error);
+    if (isInvalidCategoryError(error)) {
+      return { ok: false, error: "존재하지 않는 카테고리입니다. 목록을 새로고침해 주세요." };
+    }
     return { ok: false, error: "글을 수정할 수 없습니다." };
   }
 }

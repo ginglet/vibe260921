@@ -12,15 +12,15 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { CATEGORIES } from "@/lib/types";
-import type { Post } from "@/lib/types";
+import type { CategoryInfo, Post } from "@/lib/types";
 
 interface PostFormProps {
   post?: Post;
   isEdit?: boolean;
+  categories: CategoryInfo[];
 }
 
-export function PostForm({ post, isEdit }: PostFormProps) {
+export function PostForm({ post, isEdit, categories }: PostFormProps) {
   const router = useRouter();
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [isPending, setIsPending] = useState(false);
@@ -69,9 +69,9 @@ export function PostForm({ post, isEdit }: PostFormProps) {
               required
             >
               <option value="">선택하세요</option>
-              {CATEGORIES.map((cat) => (
-                <option key={cat} value={cat}>
-                  {cat}
+              {categories.map((cat) => (
+                <option key={cat.id} value={cat.name}>
+                  {cat.name}
                 </option>
               ))}
             </select>

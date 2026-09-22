@@ -8,6 +8,7 @@ import { CommentList } from "@/components/comment-list";
 import { CommentForm } from "@/components/comment-form";
 import { PostActions } from "./post-actions";
 import { actionGetPost } from "@/app/actions";
+import { isAdmin } from "@/lib/admin";
 
 interface PageProps {
   params: Promise<{ id: string }>;
@@ -17,7 +18,7 @@ interface PageProps {
 export const revalidate = 0;
 
 async function PostDetail({ id }: { id: number }) {
-  const result = await actionGetPost(id);
+  const [result, admin] = await Promise.all([actionGetPost(id), isAdmin()]);
 
   if (!result.ok) {
     return (
@@ -48,7 +49,7 @@ async function PostDetail({ id }: { id: number }) {
               </div>
               <h1 className="text-3xl font-bold">{post.title}</h1>
             </div>
-            <PostActions postId={post.id} />
+            <PostActions postId={post.id} isAdmin={admin} />
           </div>
         </CardHeader>
         <Separator />
@@ -82,7 +83,7 @@ async function PostDetail({ id }: { id: number }) {
         <div>
           <h2 className="text-xl font-bold mb-4">댓글 ({post.comments.length})</h2>
           <Suspense fallback={<div className="text-center text-muted-foreground">로딩 중...</div>}>
-            <CommentList postId={post.id} comments={post.comments} />
+            <CommentList postId={post.id} comments={post.comments} isAdmin={admin} />
           </Suspense>
         </div>
 

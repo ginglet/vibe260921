@@ -1,8 +1,9 @@
 "use client";
 
-import { useActionState, useState } from "react";
+import { useState, useTransition } from "react";
 import { toast } from "sonner";
 import { actionDeleteComment } from "@/app/actions";
+import { actionAdminDeleteComment } from "@/app/admin/actions";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -23,9 +24,10 @@ import type { Comment } from "@/lib/types";
 interface CommentListProps {
   postId: number;
   comments: Comment[];
+  isAdmin?: boolean;
 }
 
-export function CommentList({ postId, comments }: CommentListProps) {
+export function CommentList({ postId, comments, isAdmin = false }: CommentListProps) {
   if (comments.length === 0) {
     return <div className="rounded-lg bg-muted p-4 text-center text-sm text-muted-foreground">댓글이 없습니다.</div>;
   }
@@ -37,6 +39,7 @@ export function CommentList({ postId, comments }: CommentListProps) {
           key={comment.id}
           postId={postId}
           comment={comment}
+          isAdmin={isAdmin}
         />
       ))}
     </div>
@@ -46,12 +49,15 @@ export function CommentList({ postId, comments }: CommentListProps) {
 function CommentItem({
   postId,
   comment,
+  isAdmin,
 }: {
   postId: number;
   comment: Comment;
+  isAdmin: boolean;
 }) {
   const [showDelete, setShowDelete] = useState(false);
   const [password, setPassword] = useState("");
+  const [isPending, startTransition] = useTransition();
 
   const action = async () => {
     const formData = new FormData();
@@ -64,6 +70,18 @@ function CommentItem({
     }
     toast.success("댓글이 삭제되었습니다.");
     window.location.reload();
+  };
+
+  const adminAction = () => {
+    startTransition(async () => {
+      const result = await actionAdminDeleteComment(postId, comment.id);
+      if (!result.ok) {
+        toast.error(result.error);
+        return;
+      }
+      toast.success("댓글이 삭제되었습니다.");
+      window.location.reload();
+    });
   };
 
   const [isLoading, setIsLoading] = useState(false);
@@ -91,22 +109,35 @@ function CommentItem({
               <AlertDialogHeader>
                 <AlertDialogTitle>댓글 삭제</AlertDialogTitle>
                 <AlertDialogDescription>
-                  댓글을 삭제하시려면 작성 시 입력한 비밀번호를 입력하세요.
+                  {isAdmin
+                    ? "관리자 권한으로 이 댓글을 삭제합니다."
+                    : "댓글을 삭제하시려면 작성 시 입력한 비밀번호를 입력하세요."}
                 </AlertDialogDescription>
               </AlertDialogHeader>
-              <div>
-                <Label htmlFor="delete-password">비밀번호</Label>
-                <Input
-                  id="delete-password"
-                  type="password"
-                  placeholder="비밀번호"
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                  disabled={isLoading}
-                />
-              </div>
+              {!isAdmin && (
+                <div>
+                  <Label htmlFor="delete-password">비밀번호</Label>
+                  <Input
+                    id="delete-password"
+                    type="password"
+                    placeholder="비밀번호"
+                    value={password}
+                    onChange={(e) => setPassword(e.target.value)}
+                    disabled={isLoading}
+                  />
+                </div>
+              )}
               <AlertDialogFooter>
                 <AlertDialogCancel>취소</AlertDialogCancel>
+                {isAdmin ? (
+                  <Button
+                    onClick={adminAction}
+                    disabled={isPending}
+                    className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+                  >
+                    {isPending ? "삭제 중..." : "삭제"}
+                  </Button>
+                ) : (
                 <Button
                   onClick={async () => {
                     setIsLoading(true);
@@ -121,6 +152,7 @@ function CommentItem({
                 >
                   {isLoading ? "삭제 중..." : "삭제"}
                 </Button>
+                )}
               </AlertDialogFooter>
             </AlertDialogContent>
           </AlertDialog>

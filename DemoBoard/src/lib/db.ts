@@ -2,6 +2,7 @@ import { supabase } from "./supabase";
 import { hashPassword, verifyPassword } from "./password";
 import type {
   Category,
+  CategoryInfo,
   Comment,
   Post,
   PostSummary,
@@ -79,6 +80,7 @@ export interface ListParams {
   q?: string;
   category?: Category;
   page?: number;
+  pageSize?: number;
 }
 
 export interface ListResult {
@@ -88,7 +90,7 @@ export interface ListResult {
   totalPages: number;
 }
 
-export async function listPosts({ q, category, page = 1 }: ListParams): Promise<ListResult> {
+export async function listPosts({ q, category, page = 1, pageSize = PAGE_SIZE }: ListParams): Promise<ListResult> {
   try {
     const keyword = q?.trim().toLowerCase();
 
@@ -116,10 +118,10 @@ export async function listPosts({ q, category, page = 1 }: ListParams): Promise<
 
     // Paginate
     const total = count || 0;
-    const totalPages = Math.max(1, Math.ceil(total / PAGE_SIZE));
+    const totalPages = Math.max(1, Math.ceil(total / pageSize));
     const current = Math.min(Math.max(1, page), totalPages);
-    const start = (current - 1) * PAGE_SIZE;
-    const end = start + PAGE_SIZE;
+    const start = (current - 1) * pageSize;
+    const end = start + pageSize;
 
     const items = filtered.slice(start, end).map((p: any) => ({
       ...toSummary(p),
@@ -173,7 +175,145 @@ export async function getPost(id: number, { countView = false } = {}): Promise<P
   }
 }
 
-export type MutationError = "not_found" | "wrong_password";
+// ============ Categories ============
+
+interface CategoryRow {
+  id: number;
+  name: string;
+  sort_order: number;
+  is_pinned: boolean;
+}
+
+function toCategory(row: CategoryRow): CategoryInfo {
+  return { id: row.id, name: row.name, sortOrder: row.sort_order, isPinned: row.is_pinned };
+}
+
+export async function listCategories(): Promise<CategoryInfo[]> {
+  const { data, error } = await supabase
+    .from("categories")
+    .select("*")
+    .order("sort_order", { ascending: true })
+    .order("id", { ascending: true });
+
+  if (error) throw error;
+  return (data || []).map((row: any) => toCategory(row as CategoryRow));
+}
+
+export type CategoryMutationError =
+  | "not_found"
+  | "duplicate_name"
+  | "invalid_name"
+  | "in_use";
+
+export async function createCategory(
+  name: string,
+  isPinned = false,
+): Promise<{ ok: true; category: CategoryInfo } | { ok: false; error: CategoryMutationError }> {
+  const trimmed = name.trim();
+  if (!trimmed) return { ok: false, error: "invalid_name" };
+
+  try {
+    const { data: maxRow } = await (supabase
+      .from("categories")
+      .select("sort_order")
+      .order("sort_order", { ascending: false })
+      .limit(1) as any)
+      .maybeSingle();
+
+    const nextSortOrder = (maxRow?.sort_order ?? -1) + 1;
+
+    const { data, error } = await (supabase
+      .from("categories")
+      .insert({ name: trimmed, sort_order: nextSortOrder, is_pinned: isPinned })
+      .select("*") as any)
+      .single();
+
+    if (error) {
+      if (error.code === "23505") return { ok: false, error: "duplicate_name" };
+      throw error;
+    }
+
+    return { ok: true, category: toCategory(data as CategoryRow) };
+  } catch (error) {
+    console.error("createCategory error:", error);
+    throw error;
+  }
+}
+
+export async function renameCategory(
+  id: number,
+  name: string,
+): Promise<{ ok: true; category: CategoryInfo } | { ok: false; error: CategoryMutationError }> {
+  const trimmed = name.trim();
+  if (!trimmed) return { ok: false, error: "invalid_name" };
+
+  try {
+    const { data, error } = await (supabase
+      .from("categories")
+      .update({ name: trimmed })
+      .eq("id", id)
+      .select("*") as any)
+      .single();
+
+    if (error) {
+      if (error.code === "23505") return { ok: false, error: "duplicate_name" };
+      if (error.code === "PGRST116") return { ok: false, error: "not_found" };
+      throw error;
+    }
+    if (!data) return { ok: false, error: "not_found" };
+
+    return { ok: true, category: toCategory(data as CategoryRow) };
+  } catch (error) {
+    console.error("renameCategory error:", error);
+    throw error;
+  }
+}
+
+export async function setCategoryPinned(
+  id: number,
+  isPinned: boolean,
+): Promise<{ ok: true; category: CategoryInfo } | { ok: false; error: CategoryMutationError }> {
+  try {
+    const { data, error } = await (supabase
+      .from("categories")
+      .update({ is_pinned: isPinned })
+      .eq("id", id)
+      .select("*") as any)
+      .single();
+
+    if (error) {
+      if (error.code === "PGRST116") return { ok: false, error: "not_found" };
+      throw error;
+    }
+    if (!data) return { ok: false, error: "not_found" };
+
+    return { ok: true, category: toCategory(data as CategoryRow) };
+  } catch (error) {
+    console.error("setCategoryPinned error:", error);
+    throw error;
+  }
+}
+
+export async function deleteCategory(
+  id: number,
+): Promise<{ ok: true } | { ok: false; error: CategoryMutationError }> {
+  try {
+    const { error } = await supabase.from("categories").delete().eq("id", id);
+
+    if (error) {
+      // 이 카테고리를 사용 중인 글이 있으면 FK(on delete restrict)가 막는다.
+      if (error.code === "23503") return { ok: false, error: "in_use" };
+      throw error;
+    }
+
+    return { ok: true };
+  } catch (error) {
+    console.error("deleteCategory error:", error);
+    throw error;
+  }
+}
+
+export type MutationError = "not_found" | "wrong_password" | "invalid_category";
 
 export interface NewPost {
   title: string;
@@ -311,6 +451,56 @@ export async function addComment(
     return { ok: true };
   } catch (error) {
     console.error("addComment error:", error);
+    throw error;
+  }
+}
+
+/** 관리자 전용: 비밀번호 확인 없이 글 삭제 */
+export async function adminDeletePost(id: number): Promise<{ ok: true } | { ok: false; error: MutationError }> {
+  try {
+    const { data: post, error: fetchError } = await (supabase
+      .from("posts")
+      .select("id")
+      .eq("id", id) as any)
+      .single();
+
+    if (fetchError || !post) return { ok: false, error: "not_found" };
+
+    const { error } = await supabase.from("posts").delete().eq("id", id);
+    if (error) throw error;
+
+    return { ok: true };
+  } catch (error) {
+    console.error("adminDeletePost error:", error);
+    throw error;
+  }
+}
+
+/** 관리자 전용: 비밀번호 확인 없이 댓글 삭제 */
+export async function adminDeleteComment(
+  postId: number,
+  commentId: number
+): Promise<{ ok: true } | { ok: false; error: MutationError }> {
+  try {
+    const { data: comment, error: fetchError } = await (supabase
+      .from("comments")
+      .select("id")
+      .eq("id", commentId)
+      .eq("post_id", postId) as any)
+      .single();
+
+    if (fetchError || !comment) return { ok: false, error: "not_found" };
+
+    const { error } = await supabase
+      .from("comments")
+      .delete()
+      .eq("id", commentId)
+      .eq("post_id", postId);
+    if (error) throw error;
+
+    return { ok: true };
+  } catch (error) {
+    console.error("adminDeleteComment error:", error);
     throw error;
   }
 }
