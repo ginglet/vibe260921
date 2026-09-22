@@ -11,10 +11,9 @@ import { Card, CardContent } from "@/components/ui/card";
 
 interface CommentFormProps {
   postId: number;
-  onSuccess?: () => void;
 }
 
-export function CommentForm({ postId, onSuccess }: CommentFormProps) {
+export function CommentForm({ postId }: CommentFormProps) {
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [isPending, setIsPending] = useState(false);
 
@@ -28,7 +27,7 @@ export function CommentForm({ postId, onSuccess }: CommentFormProps) {
         return;
       }
       toast.success("댓글이 작성되었습니다.");
-      onSuccess?.();
+      window.location.reload();
     } finally {
       setIsPending(false);
     }

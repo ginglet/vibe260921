@@ -23,10 +23,9 @@ import type { Comment } from "@/lib/types";
 interface CommentListProps {
   postId: number;
   comments: Comment[];
-  onDelete?: () => void;
 }
 
-export function CommentList({ postId, comments, onDelete }: CommentListProps) {
+export function CommentList({ postId, comments }: CommentListProps) {
   if (comments.length === 0) {
     return <div className="rounded-lg bg-muted p-4 text-center text-sm text-muted-foreground">댓글이 없습니다.</div>;
   }
@@ -38,7 +37,6 @@ export function CommentList({ postId, comments, onDelete }: CommentListProps) {
           key={comment.id}
           postId={postId}
           comment={comment}
-          onDelete={onDelete}
         />
       ))}
     </div>
@@ -48,11 +46,9 @@ export function CommentList({ postId, comments, onDelete }: CommentListProps) {
 function CommentItem({
   postId,
   comment,
-  onDelete,
 }: {
   postId: number;
   comment: Comment;
-  onDelete?: () => void;
 }) {
   const [showDelete, setShowDelete] = useState(false);
   const [password, setPassword] = useState("");
@@ -67,9 +63,7 @@ function CommentItem({
       return;
     }
     toast.success("댓글이 삭제되었습니다.");
-    setShowDelete(false);
-    setPassword("");
-    onDelete?.();
+    window.location.reload();
   };
 
   const [isLoading, setIsLoading] = useState(false);

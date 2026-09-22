@@ -86,7 +86,7 @@ async function PostDetail({ id }: { id: number }) {
           </Suspense>
         </div>
 
-        <CommentForm postId={post.id} onSuccess={() => window.location.reload()} />
+        <CommentForm postId={post.id} />
       </div>
     </div>
   );
