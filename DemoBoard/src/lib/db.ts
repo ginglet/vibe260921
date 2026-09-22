@@ -81,6 +81,7 @@ export interface ListParams {
   category?: Category;
   page?: number;
   pageSize?: number;
+  sort?: "latest" | "popular";
 }
 
 export interface ListResult {
@@ -90,7 +91,7 @@ export interface ListResult {
   totalPages: number;
 }
 
-export async function listPosts({ q, category, page = 1, pageSize = PAGE_SIZE }: ListParams): Promise<ListResult> {
+export async function listPosts({ q, category, page = 1, pageSize = PAGE_SIZE, sort = "latest" }: ListParams): Promise<ListResult> {
   try {
     const keyword = q?.trim().toLowerCase();
 
@@ -101,7 +102,7 @@ export async function listPosts({ q, category, page = 1, pageSize = PAGE_SIZE }:
         count: "exact",
       })
       .order("is_notice", { ascending: false })
-      .order("created_at", { ascending: false });
+      .order(sort === "popular" ? "views" : "created_at", { ascending: false });
 
     if (error) throw error;
 
@@ -197,6 +198,18 @@ export async function listCategories(): Promise<CategoryInfo[]> {
 
   if (error) throw error;
   return (data || []).map((row: any) => toCategory(row as CategoryRow));
+}
+
+/** 카테고리 이름별 글 개수 (사이드바 카운트용) */
+export async function countPostsByCategory(): Promise<Record<string, number>> {
+  const { data, error } = await supabase.from("posts").select("category");
+  if (error) throw error;
+
+  const counts: Record<string, number> = {};
+  for (const row of (data || []) as { category: string }[]) {
+    counts[row.category] = (counts[row.category] || 0) + 1;
+  }
+  return counts;
 }
 
 export type CategoryMutationError =

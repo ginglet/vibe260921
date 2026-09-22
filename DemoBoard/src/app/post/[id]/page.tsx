@@ -107,7 +107,7 @@ export default function Page({ params, searchParams }: PageProps) {
   }
 
   return (
-    <div className="space-y-6">
+    <div className="mx-auto max-w-3xl space-y-6">
       <Link href="/">
         <Button variant="outline" size="sm">
           ← 돌아가기

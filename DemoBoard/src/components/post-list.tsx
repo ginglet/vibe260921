@@ -1,56 +1,55 @@
-"use client";
-
 import Link from "next/link";
-import { Badge } from "@/components/ui/badge";
-import { Card } from "@/components/ui/card";
-import type { PostSummary } from "@/lib/types";
+import { categoryBadgeColor } from "@/lib/category-colors";
+import type { CategoryInfo, PostSummary } from "@/lib/types";
 
 interface PostListProps {
   posts: PostSummary[];
+  categories: CategoryInfo[];
 }
 
-const CATEGORY_COLORS: Record<string, "default" | "secondary" | "destructive" | "outline"> = {
-  공지: "destructive",
-  자유: "default",
-  질문: "secondary",
-  후기: "default",
-};
-
-export function PostList({ posts }: PostListProps) {
+export function PostList({ posts, categories }: PostListProps) {
   if (posts.length === 0) {
-    return <div className="rounded-lg bg-muted p-8 text-center text-muted-foreground">글이 없습니다.</div>;
+    return (
+      <div className="rounded-2xl border border-border bg-card p-10 text-center text-muted-foreground">
+        글이 없습니다.
+      </div>
+    );
   }
 
+  const categoryByName = new Map(categories.map((c) => [c.name, c]));
+
   return (
-    <div className="space-y-2">
-      {posts.map((post) => (
-        <Link key={post.id} href={`/post/${post.id}`}>
-          <Card className="p-4 transition-colors hover:bg-muted/50">
-            <div className="flex items-start justify-between gap-4">
-              <div className="flex-1 min-w-0">
-                <div className="flex items-center gap-2 mb-1">
-                  <Badge variant={CATEGORY_COLORS[post.category] || "default"} className="text-xs">
-                    {post.category}
-                  </Badge>
-                  {post.commentCount > 0 && (
-                    <span className="text-xs text-destructive font-bold">[{post.commentCount}]</span>
-                  )}
-                </div>
-                <h3 className="font-medium truncate hover:text-primary">{post.title}</h3>
-                <div className="mt-2 text-xs text-muted-foreground space-y-1">
-                  <div>
-                    작성자: <span className="font-medium">{post.author}</span>
-                  </div>
-                  <div className="flex items-center justify-between">
-                    <span>{new Date(post.createdAt).toLocaleDateString("ko-KR")}</span>
-                    <span>조회 {post.views}</span>
-                  </div>
+    <div className="flex flex-col gap-2.5">
+      {posts.map((post) => {
+        const meta = categoryByName.get(post.category);
+        const { bg, fg } = categoryBadgeColor(meta?.sortOrder ?? 0, meta?.isPinned ?? false);
+        const isPinned = meta?.isPinned ?? false;
+
+        return (
+          <Link key={post.id} href={`/post/${post.id}`}>
+            <div
+              className="flex items-start gap-4 rounded-2xl border border-border bg-card p-[18px] transition-colors hover:border-primary/40"
+              style={isPinned ? { borderLeft: "3px solid var(--primary)" } : undefined}
+            >
+              <span
+                className="mt-0.5 shrink-0 rounded-full px-2.5 py-1 text-[11px] font-bold tracking-wide"
+                style={{ backgroundColor: bg, color: fg }}
+              >
+                {post.category}
+              </span>
+              <div className="min-w-0 flex-1">
+                <div className="mb-1.5 truncate text-[15px] font-semibold">{post.title}</div>
+                <div className="flex flex-wrap items-center gap-x-3.5 gap-y-1 text-xs text-muted-foreground">
+                  <span>{post.author}</span>
+                  <span>{new Date(post.createdAt).toLocaleDateString("ko-KR")}</span>
+                  <span>조회 {post.views}</span>
+                  <span>댓글 {post.commentCount}</span>
                 </div>
               </div>
             </div>
-          </Card>
-        </Link>
-      ))}
+          </Link>
+        );
+      })}
     </div>
   );
 }

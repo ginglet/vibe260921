@@ -11,7 +11,7 @@ export default async function WritePage() {
   const categories = await listCategories();
 
   return (
-    <div className="space-y-6">
+    <div className="mx-auto max-w-3xl space-y-6">
       <div>
         <h2 className="text-2xl font-bold">새 글 작성</h2>
       </div>

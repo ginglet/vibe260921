@@ -2,6 +2,7 @@
 
 import {
   addComment,
+  countPostsByCategory,
   createPost,
   deleteComment,
   deletePost,
@@ -28,6 +29,18 @@ export async function actionListCategories(): Promise<
   } catch (error) {
     console.error("actionListCategories failed:", error);
     return { ok: false, error: "카테고리를 불러올 수 없습니다." };
+  }
+}
+
+export async function actionCountPostsByCategory(): Promise<
+  { ok: true; counts: Record<string, number> } | { ok: false; error: string }
+> {
+  try {
+    const counts = await countPostsByCategory();
+    return { ok: true, counts };
+  } catch (error) {
+    console.error("actionCountPostsByCategory failed:", error);
+    return { ok: false, error: "글 개수를 불러올 수 없습니다." };
   }
 }
 

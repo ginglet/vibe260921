@@ -38,7 +38,7 @@ export default function EditPage({ params }: PageProps) {
   }
 
   return (
-    <div className="space-y-6">
+    <div className="mx-auto max-w-3xl space-y-6">
       <div>
         <Link href={`/post/${postId}`}>
           <Button variant="outline" size="sm">
